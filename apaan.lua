@@ -1,22 +1,27 @@
---// SERVICES
+--////////////////////////////////////////////////////
+-- SERVICES
+--////////////////////////////////////////////////////
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local Lighting = game:GetService("Lighting")
 
 local LP = Players.LocalPlayer
 
---// GLOBAL STATE
+--////////////////////////////////////////////////////
+-- GLOBAL STATE (ANTI BALIK)
+--////////////////////////////////////////////////////
 _G.State = {
     MirageDone = false,
     LockMoon = false,
     TweenGear = false
 }
 
---------------------------------------------------
--- FREEZE / UNFREEZE
---------------------------------------------------
+--////////////////////////////////////////////////////
+-- FREEZE CHARACTER
+--////////////////////////////////////////////////////
 local function freezeChar(state)
     local char = LP.Character
     if not char then return end
@@ -35,9 +40,9 @@ local function freezeChar(state)
     end
 end
 
---------------------------------------------------
--- TWEEN FUNCTION (ANTI LASAK)
---------------------------------------------------
+--////////////////////////////////////////////////////
+-- TWEEN FUNCTION (NO TP)
+--////////////////////////////////////////////////////
 local function tweenTo(cf, speed)
     local char = LP.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
@@ -59,36 +64,63 @@ local function tweenTo(cf, speed)
     freezeChar(false)
 end
 
---------------------------------------------------
--- GUI (DRAGGABLE)
---------------------------------------------------
-local gui = Instance.new("ScreenGui", LP.PlayerGui)
+--////////////////////////////////////////////////////
+-- GUI
+--////////////////////////////////////////////////////
+local gui = Instance.new("ScreenGui")
 gui.Name = "DemonHub"
+gui.Parent = LP.PlayerGui
 
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0,300,0,170)
+main.Size = UDim2.new(0,320,0,180)
 main.Position = UDim2.new(0.35,0,0.3,0)
 main.BackgroundColor3 = Color3.fromRGB(18,18,18)
-main.Active = true
-main.Draggable = true
 
-local uic = Instance.new("UICorner", main)
-uic.CornerRadius = UDim.new(0,12)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
+
+-- DRAG SYSTEM (FIXED)
+do
+    local dragging, dragStart, startPos
+    main.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = main.Position
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            main.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+end
 
 local title = Instance.new("TextLabel", main)
 title.Size = UDim2.new(1,0,0,35)
-title.Text = "🔥 Demon Hub"
 title.BackgroundTransparency = 1
-title.TextColor3 = Color3.fromRGB(255,80,80)
+title.Text = "🔥 Demon Hub"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 18
+title.TextColor3 = Color3.fromRGB(255,80,80)
 
 local MirageLabel = Instance.new("TextLabel", main)
 MirageLabel.Position = UDim2.new(0,10,0,45)
 MirageLabel.Size = UDim2.new(1,-20,0,30)
 MirageLabel.BackgroundTransparency = 1
 MirageLabel.Text = "Mirage: Checking..."
-MirageLabel.TextColor3 = Color3.fromRGB(255,255,255)
 MirageLabel.Font = Enum.Font.Gotham
 MirageLabel.TextSize = 14
 MirageLabel.TextXAlignment = Left
@@ -98,52 +130,53 @@ MoonLabel.Position = UDim2.new(0,10,0,80)
 MoonLabel.Size = UDim2.new(1,-20,0,30)
 MoonLabel.BackgroundTransparency = 1
 MoonLabel.Text = "Moon: 0"
-MoonLabel.TextColor3 = Color3.fromRGB(200,200,255)
 MoonLabel.Font = Enum.Font.Gotham
 MoonLabel.TextSize = 14
 MoonLabel.TextXAlignment = Left
+MoonLabel.TextColor3 = Color3.fromRGB(180,180,255)
 
---------------------------------------------------
--- MIRAGE ESP (BEDA WARNA & BOX)
---------------------------------------------------
+--////////////////////////////////////////////////////
+-- MIRAGE ESP (BOX STYLE)
+--////////////////////////////////////////////////////
 local function UpdateIslandMirageESP()
     for _,v in pairs(workspace._WorldOrigin.Locations:GetChildren()) do
-        pcall(function()
-            if v.Name == "Mirage Island" then
-                if not v:FindFirstChild("NameEsp") then
-                    local bill = Instance.new("BillboardGui", v)
-                    bill.Name = "NameEsp"
-                    bill.Size = UDim2.new(0,200,0,50)
-                    bill.AlwaysOnTop = true
-                    bill.StudsOffset = Vector3.new(0,5,0)
+        if v.Name == "Mirage Island" then
+            if not v:FindFirstChild("NameEsp") then
+                local bill = Instance.new("BillboardGui", v)
+                bill.Name = "NameEsp"
+                bill.Size = UDim2.new(0,220,0,55)
+                bill.AlwaysOnTop = true
+                bill.StudsOffset = Vector3.new(0,6,0)
 
-                    local frame = Instance.new("Frame", bill)
-                    frame.Size = UDim2.new(1,0,1,0)
-                    frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
-                    frame.BackgroundTransparency = 0.2
-                    Instance.new("UICorner", frame).CornerRadius = UDim.new(0,8)
+                local frame = Instance.new("Frame", bill)
+                frame.Size = UDim2.new(1,0,1,0)
+                frame.BackgroundColor3 = Color3.fromRGB(10,10,10)
+                frame.BackgroundTransparency = 0.25
+                Instance.new("UICorner", frame).CornerRadius = UDim.new(0,8)
 
-                    local txt = Instance.new("TextLabel", frame)
-                    txt.Size = UDim2.new(1,0,1,0)
-                    txt.BackgroundTransparency = 1
-                    txt.TextColor3 = Color3.fromRGB(0,255,255)
-                    txt.Font = Enum.Font.Code
-                    txt.TextSize = 14
-                    txt.TextWrapped = true
-                else
-                    local dist = math.floor((LP.Character.HumanoidRootPart.Position - v.Position).Magnitude)
-                    v.NameEsp.Frame.TextLabel.Text = "🌴 MIRAGE ISLAND\n"..dist.."m"
+                local txt = Instance.new("TextLabel", frame)
+                txt.Name = "Text"
+                txt.Size = UDim2.new(1,0,1,0)
+                txt.BackgroundTransparency = 1
+                txt.Font = Enum.Font.Code
+                txt.TextSize = 14
+                txt.TextColor3 = Color3.fromRGB(0,255,255)
+                txt.TextWrapped = true
+            else
+                local hrp = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    local d = math.floor((hrp.Position - v.Position).Magnitude)
+                    v.NameEsp.Frame.Text.Text = "🌴 MIRAGE ISLAND\n"..d.." m"
                 end
             end
-        end)
+        end
     end
 end
-
 RunService.RenderStepped:Connect(UpdateIslandMirageESP)
 
---------------------------------------------------
--- MIRAGE DETECTOR + TWEEN (ONCE)
---------------------------------------------------
+--////////////////////////////////////////////////////
+-- MIRAGE DETECT + TWEEN (ONCE)
+--////////////////////////////////////////////////////
 task.spawn(function()
     while task.wait(1.5) do
         if _G.State.MirageDone then return end
@@ -163,15 +196,15 @@ task.spawn(function()
     end
 end)
 
---------------------------------------------------
+--////////////////////////////////////////////////////
 -- LOCK MOON + V3
---------------------------------------------------
+--////////////////////////////////////////////////////
 task.spawn(function()
     while task.wait(1) do
         if _G.State.LockMoon then
-            local moonDir = Lighting:GetMoonDirection()
             local cam = workspace.CurrentCamera
-            cam.CFrame = CFrame.lookAt(cam.CFrame.Position, cam.CFrame.Position + moonDir * 100)
+            local dir = Lighting:GetMoonDirection()
+            cam.CFrame = CFrame.lookAt(cam.CFrame.Position, cam.CFrame.Position + dir * 100)
 
             VirtualInputManager:SendKeyEvent(true,"T",false,game)
             task.wait(0.1)
@@ -183,9 +216,9 @@ task.spawn(function()
     end
 end)
 
---------------------------------------------------
+--////////////////////////////////////////////////////
 -- TWEEN KE MYSTIC GEAR
---------------------------------------------------
+--////////////////////////////////////////////////////
 task.spawn(function()
     while task.wait(1) do
         if _G.State.TweenGear then
@@ -202,9 +235,9 @@ task.spawn(function()
     end
 end)
 
---------------------------------------------------
--- MOON UI STATUS
---------------------------------------------------
+--////////////////////////////////////////////////////
+-- MOON STATUS UI
+--////////////////////////////////////////////////////
 task.spawn(function()
     while task.wait(1) do
         local id = Lighting.Sky.MoonTextureId
@@ -215,10 +248,10 @@ task.spawn(function()
             ["9709150401"] = "25",
             ["9709149680"] = "15"
         }
-        local percent = "0"
-        for k,v in pairs(map) do
-            if string.find(id,k) then percent = v end
+        local v = "0"
+        for k,val in pairs(map) do
+            if string.find(id,k) then v = val end
         end
-        MoonLabel.Text = "Moon: "..percent
+        MoonLabel.Text = "Moon: "..v
     end
 end)
