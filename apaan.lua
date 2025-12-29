@@ -1,111 +1,139 @@
-print("=== MIRAGE AUTO SCRIPT START ===")
+print("=== DEMON HUB GUI LOADING ===")
 
 -- SERVICES
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local VIM = game:GetService("VirtualInputManager")
 local Lighting = game:GetService("Lighting")
+local UIS = game:GetService("UserInputService")
+local LP = Players.LocalPlayer
 
--- FLAGS
-_G.AutoMirage = true
-_G.LockMoonV3 = true
-_G.TweenGear = true
+-- CLEAN OLD UI
+pcall(function()
+    game.CoreGui.DemonHubUI:Destroy()
+end)
 
-print("Player:", LocalPlayer.Name)
+-- SCREEN GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DemonHubUI"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- MAIN FRAME
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0,420,0,220)
+Main.Position = UDim2.new(0.5,-210,0.5,-110)
+Main.BackgroundColor3 = Color3.fromRGB(20,20,25)
+Main.BorderSizePixel = 0
+
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0,12)
+
+-- STROKE
+local Stroke = Instance.new("UIStroke", Main)
+Stroke.Color = Color3.fromRGB(170,100,255)
+Stroke.Thickness = 2
+
+-- TITLE BAR
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1,0,0,45)
+Title.BackgroundTransparency = 1
+Title.Text = "🌙 Demon Hub"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 22
+Title.TextColor3 = Color3.fromRGB(180,255,255)
+
+-- CONTENT
+local Content = Instance.new("Frame", Main)
+Content.Position = UDim2.new(0,0,0,50)
+Content.Size = UDim2.new(1,0,1,-50)
+Content.BackgroundTransparency = 1
+
+-- MIRAGE STATUS
+local MirageLabel = Instance.new("TextLabel", Content)
+MirageLabel.Size = UDim2.new(1,-20,0,40)
+MirageLabel.Position = UDim2.new(0,10,0,10)
+MirageLabel.BackgroundColor3 = Color3.fromRGB(30,30,40)
+MirageLabel.Text = "Mirage: Checking..."
+MirageLabel.Font = Enum.Font.Gotham
+MirageLabel.TextSize = 16
+MirageLabel.TextColor3 = Color3.fromRGB(255,255,255)
+Instance.new("UICorner", MirageLabel).CornerRadius = UDim.new(0,8)
+
+-- MOON STATUS
+local MoonLabel = Instance.new("TextLabel", Content)
+MoonLabel.Size = UDim2.new(1,-20,0,40)
+MoonLabel.Position = UDim2.new(0,10,0,60)
+MoonLabel.BackgroundColor3 = Color3.fromRGB(30,30,40)
+MoonLabel.Text = "Moon: 0/4"
+MoonLabel.Font = Enum.Font.Gotham
+MoonLabel.TextSize = 16
+MoonLabel.TextColor3 = Color3.fromRGB(255,255,255)
+Instance.new("UICorner", MoonLabel).CornerRadius = UDim.new(0,8)
 
 --------------------------------------------------
--- SIMPLE TOPOS (Tween Teleport)
+-- DRAG FUNCTION
 --------------------------------------------------
-function topos(cf)
-    local char = LocalPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+local dragging = false
+local dragStart, startPos
 
-    char.HumanoidRootPart.CFrame = cf
-end
+Title.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Main.Position
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        Main.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
 
 --------------------------------------------------
--- STEP 1: FIND MIRAGE + TELEPORT
+-- MIRAGE CHECK
 --------------------------------------------------
 task.spawn(function()
-    print("[THREAD] Mirage Detector Started")
-    while task.wait(1) do
+    while task.wait(1.5) do
         pcall(function()
-            if _G.AutoMirage then
-                for _,v in pairs(workspace._WorldOrigin.Locations:GetChildren()) do
-                    if v.Name == "Mirage Island" then
-                        print("[✓] Mirage Island FOUND")
-                        print("[→] Teleporting to Mirage...")
-                        topos(v.CFrame * CFrame.new(0,300,0))
-                        _G.AutoMirage = false
-                        _G.LockMoonV3 = true
-                    end
-                end
+            if workspace._WorldOrigin.Locations:FindFirstChild("Mirage Island") then
+                MirageLabel.Text = "Mirage: Spawn ✅"
+                MirageLabel.TextColor3 = Color3.fromRGB(120,255,120)
+            else
+                MirageLabel.Text = "Mirage: No Spawn ❌"
+                MirageLabel.TextColor3 = Color3.fromRGB(255,120,120)
             end
         end)
     end
 end)
 
 --------------------------------------------------
--- STEP 2: LOCK MOON + ACTIVATE V3
+-- MOON CHECK (1/4, 2/4, 3/4, 4/4)
 --------------------------------------------------
 task.spawn(function()
-    print("[THREAD] Moon Lock Started")
-    while task.wait(2) do
+    while task.wait(1.5) do
         pcall(function()
-            if _G.LockMoonV3 then
-                local moonDir = Lighting:GetMoonDirection()
-                local cam = workspace.CurrentCamera
+            local id = Lighting.Sky.MoonTextureId
+            local stage = ({
+                ["9709149680"] = "1/4",
+                ["9709150401"] = "2/4",
+                ["9709143733"] = "3/4",
+                ["9709149431"] = "4/4"
+            })[id:match("%d+")] or "0/4"
 
-                cam.CFrame = CFrame.lookAt(
-                    cam.CFrame.Position,
-                    cam.CFrame.Position + moonDir * 100
-                )
-
-                print("[→] Locking moon & pressing T (V3)")
-                VIM:SendKeyEvent(true,"T",false,game)
-                task.wait(0.1)
-                VIM:SendKeyEvent(false,"T",false,game)
-
-                -- setelah aktif, lanjut ke gear
-                _G.LockMoonV3 = false
-                _G.TweenGear = true
-            end
+            MoonLabel.Text = "Moon: "..stage
         end)
     end
 end)
 
---------------------------------------------------
--- STEP 3: TWEEN TO MYSTIC GEAR
---------------------------------------------------
-task.spawn(function()
-    print("[THREAD] Mystic Gear Finder Started")
-    while task.wait(1) do
-        pcall(function()
-            if _G.TweenGear then
-                if workspace.Map:FindFirstChild("MysticIsland") then
-                    for _,v in pairs(workspace.Map.MysticIsland:GetChildren()) do
-                        if v:IsA("MeshPart") and v.Material == Enum.Material.Neon then
-                            print("[✓] Mystic Gear FOUND → Teleport")
-                            topos(v.CFrame)
-                            _G.TweenGear = false
-                        end
-                    end
-                end
-            end
-        end)
-    end
-end)
-
---------------------------------------------------
--- MOON STATUS DEBUG
---------------------------------------------------
-task.spawn(function()
-    while task.wait(3) do
-        local moon = Lighting.Sky.MoonTextureId
-        if moon then
-            print("[MOON ID]:", moon)
-        end
-    end
-end)
-
-print("=== MIRAGE AUTO SCRIPT LOADED ===")
+print("=== DEMON HUB GUI LOADED SUCCESS ===")
