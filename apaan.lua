@@ -14,7 +14,7 @@ pcall(function()
 end)
 
 --------------------------------------------------
--- GUI (ASLI PUNYA KAMU, TIDAK DIUBAH)
+-- GUI
 --------------------------------------------------
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 ScreenGui.Name = "DemonHubUI"
@@ -31,16 +31,34 @@ local Stroke = Instance.new("UIStroke", Main)
 Stroke.Color = Color3.fromRGB(160,100,255)
 Stroke.Thickness = 2
 
+-- TITLE
 local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1,0,0,45)
+Title.Size = UDim2.new(1,-40,0,45)
+Title.Position = UDim2.new(0,10,0,0)
 Title.BackgroundTransparency = 1
 Title.Text = "🌙 Demon Hub"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 22
 Title.TextColor3 = Color3.fromRGB(180,255,255)
+Title.TextXAlignment = Left
 Title.Active = true
-Title.Selectable = true
 
+-- CLOSE BUTTON
+local Close = Instance.new("TextButton", Main)
+Close.Size = UDim2.new(0,35,0,35)
+Close.Position = UDim2.new(1,-40,0,5)
+Close.Text = "✕"
+Close.Font = Enum.Font.GothamBold
+Close.TextSize = 20
+Close.BackgroundColor3 = Color3.fromRGB(35,35,45)
+Close.TextColor3 = Color3.fromRGB(255,120,120)
+Instance.new("UICorner", Close).CornerRadius = UDim.new(0,8)
+
+Close.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- LABELS
 local MirageLabel = Instance.new("TextLabel", Main)
 MirageLabel.Position = UDim2.new(0,10,0,60)
 MirageLabel.Size = UDim2.new(1,-20,0,40)
@@ -62,63 +80,35 @@ MoonLabel.TextColor3 = Color3.new(1,1,1)
 Instance.new("UICorner", MoonLabel).CornerRadius = UDim.new(0,8)
 
 --------------------------------------------------
--- DRAG (ASLI, AMAN)
+-- DRAG
 --------------------------------------------------
-local dragging, dragInput, dragStart, startPos
-local function update(input)
-    local delta = input.Position - dragStart
-    Main.Position = UDim2.new(
-        startPos.X.Scale, startPos.X.Offset + delta.X,
-        startPos.Y.Scale, startPos.Y.Offset + delta.Y
-    )
-end
-
-Title.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+local dragging, dragStart, startPos
+Title.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
-        dragStart = input.Position
+        dragStart = i.Position
         startPos = Main.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
     end
 end)
 
-Title.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
+UIS.InputChanged:Connect(function(i)
+    if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+        local d = i.Position - dragStart
+        Main.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + d.X,
+            startPos.Y.Scale, startPos.Y.Offset + d.Y
+        )
     end
 end)
 
-UIS.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        update(input)
+UIS.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
     end
 end)
 
 --------------------------------------------------
--- FREEZE / UNFREEZE (ANTI LASAK)
---------------------------------------------------
-local function freezeChar(state)
-    local char = LP.Character
-    if not char then return end
-    for _,v in pairs(char:GetDescendants()) do
-        if v:IsA("BasePart") then
-            v.Anchored = state
-            v.CanCollide = not state
-        end
-    end
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.PlatformStand = state
-        hum.AutoRotate = not state
-    end
-end
-
---------------------------------------------------
--- TWEEN FUNCTION (BUKAN TP)
+-- TWEEN (NO FREEZE, NO SNAP BACK)
 --------------------------------------------------
 local function tweenTo(cf, speed)
     local char = LP.Character
@@ -128,8 +118,6 @@ local function tweenTo(cf, speed)
     local dist = (hrp.Position - cf.Position).Magnitude
     local time = dist / (speed or 250)
 
-    freezeChar(true)
-
     local tween = TweenService:Create(
         hrp,
         TweenInfo.new(time, Enum.EasingStyle.Linear),
@@ -137,23 +125,20 @@ local function tweenTo(cf, speed)
     )
     tween:Play()
     tween.Completed:Wait()
-
-    freezeChar(false)
 end
 
 --------------------------------------------------
--- FLAGS (ANTI BALIK TOTAL)
+-- FLAGS
 --------------------------------------------------
 _G.AutoMirage = true
+_G.MirageDone = false
 _G.LockMoon = false
 _G.TweenGear = false
-_G.MirageDone = false
 
 --------------------------------------------------
--- MIRAGE CHECK + TWEEN (ONCE ONLY)
+-- MIRAGE → TWEEN (ONCE)
 --------------------------------------------------
 task.spawn(function()
-    print("[THREAD] Mirage detector")
     while task.wait(1.5) do
         local mirage = workspace._WorldOrigin.Locations:FindFirstChild("Mirage Island")
         if mirage then
@@ -161,13 +146,11 @@ task.spawn(function()
             MirageLabel.TextColor3 = Color3.fromRGB(120,255,120)
 
             if _G.AutoMirage and not _G.MirageDone then
-                _G.MirageDone = true -- 🔒 KUNCI (ANTI BALIK)
-                print("[→] Tween to Mirage (freeze)")
+                _G.MirageDone = true
                 tweenTo(mirage.CFrame * CFrame.new(0,300,0), 260)
-
                 _G.AutoMirage = false
                 _G.LockMoon = true
-                break -- MATIIN THREAD
+                break
             end
         else
             MirageLabel.Text = "Mirage: No Spawn ❌"
@@ -180,14 +163,12 @@ end)
 -- LOCK MOON + V3
 --------------------------------------------------
 task.spawn(function()
-    print("[THREAD] Moon lock")
     while task.wait(2) do
         if _G.LockMoon then
-            local dir = Lighting:GetMoonDirection()
             local cam = workspace.CurrentCamera
+            local dir = Lighting:GetMoonDirection()
             cam.CFrame = CFrame.lookAt(cam.CFrame.Position, cam.CFrame.Position + dir*100)
 
-            print("[→] Press T (V3)")
             VIM:SendKeyEvent(true,"T",false,game)
             task.wait(0.1)
             VIM:SendKeyEvent(false,"T",false,game)
@@ -199,31 +180,28 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- MOON STATUS UI
+-- MOON STATUS
 --------------------------------------------------
 task.spawn(function()
     while task.wait(1.5) do
         local id = Lighting.Sky.MoonTextureId:match("%d+")
-        local stage = ({
+        MoonLabel.Text = "Moon: "..({
             ["9709149680"]="1/4",
             ["9709150401"]="2/4",
             ["9709143733"]="3/4",
             ["9709149431"]="4/4"
         })[id] or "0/4"
-        MoonLabel.Text = "Moon: "..stage
     end
 end)
 
 --------------------------------------------------
--- TWEEN KE MYSTIC GEAR (FINAL)
+-- TWEEN TO MYSTIC GEAR
 --------------------------------------------------
 task.spawn(function()
-    print("[THREAD] Mystic gear")
     while task.wait(1) do
         if _G.TweenGear and workspace.Map:FindFirstChild("MysticIsland") then
             for _,v in pairs(workspace.Map.MysticIsland:GetChildren()) do
                 if v:IsA("MeshPart") and v.Material == Enum.Material.Neon then
-                    print("[✓] Tween to Mystic Gear")
                     tweenTo(v.CFrame, 220)
                     _G.TweenGear = false
                     break
@@ -233,4 +211,4 @@ task.spawn(function()
     end
 end)
 
-print("=== DEMON HUB LOADED ===")
+print("=== DEMON HUB LOADED (NO FREEZE) ===")
