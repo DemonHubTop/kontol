@@ -20,11 +20,27 @@ getgenv().TweenMGear = true
 
 local MirageArrived = false
 local MoonActivated = false
+local Tweening = false
 
 --------------------------------------------------
--- TWEEN FUNCTION
+-- PHYSICS FIX (ANTI NAIK TURUN)
+--------------------------------------------------
+local function setPhysics(state)
+    local char = LP.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum:ChangeState(state and Enum.HumanoidStateType.Physics 
+            or Enum.HumanoidStateType.GettingUp)
+    end
+end
+
+--------------------------------------------------
+-- TWEEN FUNCTION (STABIL)
 --------------------------------------------------
 local function topos(cf)
+    if Tweening then return end
+    Tweening = true
+
     local char = LP.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then return end
     local hrp = char.HumanoidRootPart
@@ -32,11 +48,18 @@ local function topos(cf)
     local dist = (hrp.Position - cf.Position).Magnitude
     local time = dist / 300
 
-    TweenService:Create(
+    setPhysics(true)
+
+    local tween = TweenService:Create(
         hrp,
         TweenInfo.new(time, Enum.EasingStyle.Linear),
         {CFrame = cf}
-    ):Play()
+    )
+    tween:Play()
+    tween.Completed:Wait()
+
+    setPhysics(false)
+    Tweening = false
 end
 
 --------------------------------------------------
@@ -49,14 +72,14 @@ function UpdateIslandMirageESP()
                 if not v:FindFirstChild("NameEsp") then
                     local bill = Instance.new("BillboardGui", v)
                     bill.Name = "NameEsp"
-                    bill.Size = UDim2.new(0,220,0,40)
+                    bill.Size = UDim2.new(0,230,0,42)
                     bill.AlwaysOnTop = true
                     bill.StudsOffset = Vector3.new(0,3,0)
 
                     local frame = Instance.new("Frame", bill)
                     frame.Size = UDim2.new(1,0,1,0)
-                    frame.BackgroundColor3 = Color3.fromRGB(15,20,35)
-                    frame.BackgroundTransparency = 0.15
+                    frame.BackgroundColor3 = Color3.fromRGB(10,15,30)
+                    frame.BackgroundTransparency = 0.1
                     Instance.new("UICorner", frame).CornerRadius = UDim.new(0,8)
 
                     local txt = Instance.new("TextLabel", frame)
@@ -95,13 +118,14 @@ local GUI = Instance.new("ScreenGui", LP.PlayerGui)
 GUI.Name = "DemonHubUI"
 
 local Main = Instance.new("Frame", GUI)
-Main.Size = UDim2.new(0,320,0,180)
-Main.Position = UDim2.new(0.5,-160,0.5,-90)
+Main.Size = UDim2.new(0,330,0,200)
+Main.Position = UDim2.new(0.5,-165,0.5,-100)
 Main.BackgroundColor3 = Color3.fromRGB(20,20,25)
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0,10)
 
 local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1,0,0,35)
+Title.Size = UDim2.new(1,-40,0,35)
+Title.Position = UDim2.new(0,10,0,0)
 Title.Text = "Demon Hub"
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 18
@@ -109,8 +133,19 @@ Title.TextColor3 = Color3.fromRGB(180,255,255)
 Title.BackgroundTransparency = 1
 Title.Active = true
 
+local Close = Instance.new("TextButton", Main)
+Close.Size = UDim2.new(0,30,0,30)
+Close.Position = UDim2.new(1,-35,0,3)
+Close.Text = "X"
+Close.Font = Enum.Font.GothamBold
+Close.TextColor3 = Color3.fromRGB(255,100,100)
+Close.BackgroundTransparency = 1
+Close.MouseButton1Click:Connect(function()
+    GUI:Destroy()
+end)
+
 local MirageLabel = Instance.new("TextLabel", Main)
-MirageLabel.Position = UDim2.new(0,10,0,50)
+MirageLabel.Position = UDim2.new(0,10,0,45)
 MirageLabel.Size = UDim2.new(1,-20,0,35)
 MirageLabel.BackgroundColor3 = Color3.fromRGB(30,30,40)
 MirageLabel.TextColor3 = Color3.new(1,1,1)
@@ -118,15 +153,15 @@ MirageLabel.Text = "Mirage: Checking..."
 Instance.new("UICorner", MirageLabel)
 
 local MoonLabel = Instance.new("TextLabel", Main)
-MoonLabel.Position = UDim2.new(0,10,0,95)
+MoonLabel.Position = UDim2.new(0,10,0,90)
 MoonLabel.Size = UDim2.new(1,-20,0,35)
 MoonLabel.BackgroundColor3 = Color3.fromRGB(30,30,40)
 MoonLabel.TextColor3 = Color3.new(1,1,1)
-MoonLabel.Text = "Moon: 0"
+MoonLabel.Text = "Moon: 0%"
 Instance.new("UICorner", MoonLabel)
 
 --------------------------------------------------
--- DRAG
+-- DRAG GUI
 --------------------------------------------------
 local drag, dragStart, startPos
 Title.InputBegan:Connect(function(i)
@@ -152,7 +187,7 @@ UIS.InputEnded:Connect(function(i)
 end)
 
 --------------------------------------------------
--- MIRAGE CHECK + TWEEN
+-- MIRAGE CHECK + TWEEN (ONCE)
 --------------------------------------------------
 task.spawn(function()
     while task.wait(1.5) do
@@ -161,6 +196,7 @@ task.spawn(function()
             MirageLabel.Text = "Mirage: Spawn ✅"
             if AutoMirage and not MirageArrived then
                 MirageArrived = true
+                AutoMirage = false
                 topos(mirage.CFrame * CFrame.new(0,300,0))
             end
         else
@@ -170,7 +206,7 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- LOCK MOON + V3
+-- LOCK MOON + V3 (ONCE)
 --------------------------------------------------
 task.spawn(function()
     while task.wait(2) do
@@ -203,7 +239,7 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- TWEEN MYSTIC GEAR
+-- TWEEN TO MYSTIC GEAR (ONCE)
 --------------------------------------------------
 task.spawn(function()
     while task.wait(1) do
@@ -212,8 +248,8 @@ task.spawn(function()
             if map then
                 for _,v in pairs(map:GetChildren()) do
                     if v:IsA("MeshPart") and v.Material == Enum.Material.Neon then
-                        topos(v.CFrame)
                         TweenMGear = false
+                        topos(v.CFrame)
                         break
                     end
                 end
