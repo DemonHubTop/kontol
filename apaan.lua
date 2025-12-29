@@ -1,50 +1,111 @@
+print("=== MIRAGE AUTO SCRIPT START ===")
+
+-- SERVICES
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local VIM = game:GetService("VirtualInputManager")
+local Lighting = game:GetService("Lighting")
 
-function UpdateIslandMirageESP()
-    for _,v in pairs(game:GetService("Workspace")._WorldOrigin.Locations:GetChildren()) do
+-- FLAGS
+_G.AutoMirage = true
+_G.LockMoonV3 = true
+_G.TweenGear = true
+
+print("Player:", LocalPlayer.Name)
+
+--------------------------------------------------
+-- SIMPLE TOPOS (Tween Teleport)
+--------------------------------------------------
+function topos(cf)
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+    char.HumanoidRootPart.CFrame = cf
+end
+
+--------------------------------------------------
+-- STEP 1: FIND MIRAGE + TELEPORT
+--------------------------------------------------
+task.spawn(function()
+    print("[THREAD] Mirage Detector Started")
+    while task.wait(1) do
         pcall(function()
-            if MirageIslandESP and v.Name == "Mirage Island" then
-                if not v:FindFirstChild("NameEsp") then
-                    local gui = Instance.new("BillboardGui", v)
-                    gui.Name = "NameEsp"
-                    gui.Adornee = v
-                    gui.Size = UDim2.new(0,220,0,60)
-                    gui.ExtentsOffset = Vector3.new(0,3,0)
-                    gui.AlwaysOnTop = true
-
-                    local frame = Instance.new("Frame", gui)
-                    frame.Size = UDim2.new(1,0,1,0)
-                    frame.BackgroundColor3 = Color3.fromRGB(25,25,35)
-                    frame.BackgroundTransparency = 0.1
-
-                    Instance.new("UICorner", frame).CornerRadius = UDim.new(0,10)
-
-                    local stroke = Instance.new("UIStroke", frame)
-                    stroke.Thickness = 2
-                    stroke.Color = Color3.fromRGB(180,100,255)
-
-                    local text = Instance.new("TextLabel", frame)
-                    text.Name = "Text"
-                    text.Size = UDim2.new(1,0,1,0)
-                    text.BackgroundTransparency = 1
-                    text.Font = Enum.Font.GothamBold
-                    text.TextColor3 = Color3.fromRGB(150,255,255)
-                    text.TextScaled = true
-                    text.TextStrokeTransparency = 0.4
-                end
-
-                local dist = math.floor(
-                    (LocalPlayer.Character.Head.Position - v.Position).Magnitude/3
-                )
-                v.NameEsp.Frame.Text.Text =
-                    "🌙 MIRAGE ISLAND\n"..dist.." M"
-
-            else
-                if v:FindFirstChild("NameEsp") then
-                    v.NameEsp:Destroy()
+            if _G.AutoMirage then
+                for _,v in pairs(workspace._WorldOrigin.Locations:GetChildren()) do
+                    if v.Name == "Mirage Island" then
+                        print("[✓] Mirage Island FOUND")
+                        print("[→] Teleporting to Mirage...")
+                        topos(v.CFrame * CFrame.new(0,300,0))
+                        _G.AutoMirage = false
+                        _G.LockMoonV3 = true
+                    end
                 end
             end
         end)
     end
-end
+end)
+
+--------------------------------------------------
+-- STEP 2: LOCK MOON + ACTIVATE V3
+--------------------------------------------------
+task.spawn(function()
+    print("[THREAD] Moon Lock Started")
+    while task.wait(2) do
+        pcall(function()
+            if _G.LockMoonV3 then
+                local moonDir = Lighting:GetMoonDirection()
+                local cam = workspace.CurrentCamera
+
+                cam.CFrame = CFrame.lookAt(
+                    cam.CFrame.Position,
+                    cam.CFrame.Position + moonDir * 100
+                )
+
+                print("[→] Locking moon & pressing T (V3)")
+                VIM:SendKeyEvent(true,"T",false,game)
+                task.wait(0.1)
+                VIM:SendKeyEvent(false,"T",false,game)
+
+                -- setelah aktif, lanjut ke gear
+                _G.LockMoonV3 = false
+                _G.TweenGear = true
+            end
+        end)
+    end
+end)
+
+--------------------------------------------------
+-- STEP 3: TWEEN TO MYSTIC GEAR
+--------------------------------------------------
+task.spawn(function()
+    print("[THREAD] Mystic Gear Finder Started")
+    while task.wait(1) do
+        pcall(function()
+            if _G.TweenGear then
+                if workspace.Map:FindFirstChild("MysticIsland") then
+                    for _,v in pairs(workspace.Map.MysticIsland:GetChildren()) do
+                        if v:IsA("MeshPart") and v.Material == Enum.Material.Neon then
+                            print("[✓] Mystic Gear FOUND → Teleport")
+                            topos(v.CFrame)
+                            _G.TweenGear = false
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+--------------------------------------------------
+-- MOON STATUS DEBUG
+--------------------------------------------------
+task.spawn(function()
+    while task.wait(3) do
+        local moon = Lighting.Sky.MoonTextureId
+        if moon then
+            print("[MOON ID]:", moon)
+        end
+    end
+end)
+
+print("=== MIRAGE AUTO SCRIPT LOADED ===")
