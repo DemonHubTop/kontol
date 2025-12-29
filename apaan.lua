@@ -1,3 +1,25 @@
+
+--====================================================
+-- DEMON HUB (ALL WINDUI)
+-- Matsune Logic ONLY (GUI REMOVED)
+-- Controlled 100% by WindUI
+-- Made by jova
+--====================================================
+
+-- ===== GLOBAL FLAGS (CONTROLLED BY WINDUI) =====
+_G.AutoFarm = false
+_G.AutoNear = false
+_G.AutoQuest = false
+_G.AutoBoss = false
+_G.AutoFarmAura = false
+_G.AutoFarmMaterial = false
+_G.AutoBone = false
+_G.AutoSecondSea = false
+_G.AutoThirdSea = false
+
+_G.SelectWeapon = "Melee"
+_G.FarmDistance = 25
+
 local MatsuneA1 = {};
 
 MatsuneA1["1"] = Instance.new("ScreenGui", game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"));
@@ -4756,7 +4778,7 @@ end
 
 ----------------------------------------------------------------------------------------------------------------------------------------------
 
-local Window = library:NaJa()
+-- GUI REMOVED
 
 local Main = Window:Tab("General","14477284625")
 local AutoQuest = Window:Tab("Items Quest","11446859498")
@@ -11643,35 +11665,28 @@ end)
      
 
 
---==============================
--- DEMON HUB GUI (WindUI)
--- Made by jova
---==============================
-
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+--====================================================
+-- WIND UI
+--====================================================
+local WindUI = loadstring(game:HttpGet(
+"https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"
+))()
 
 local Window = WindUI:CreateWindow({
     Title = "Demon Hub",
     Author = "Made by jova",
-    Size = UDim2.new(0, 620, 0, 480),
+    Size = UDim2.new(0,620,0,480),
     Theme = "Dark",
     Icon = "square"
 })
 
---==============================
--- SETTINGS TAB
---==============================
+-- SETTINGS
 local Settings = Window:Tab({Title="Settings",Icon="Settings"})
-
-_G.FastAttack = true
-_G.AutoHaki = true
-
-Settings:Toggle({Title="Fast Attack",Value=true,Callback=function() end})
-Settings:Toggle({Title="Auto Haki",Value=true,Callback=function() end})
 
 Settings:Dropdown({
     Title="Select Weapon",
-    Options={"Melee","Sword","Fruit","Gun"},
+    Options={"Melee","Sword","Fruit"},
+    Default="Melee",
     Callback=function(v)
         _G.SelectWeapon = v
     end
@@ -11680,87 +11695,24 @@ Settings:Dropdown({
 Settings:Dropdown({
     Title="Farm Distance",
     Options={"20","25","30","35","40"},
+    Default="25",
     Callback=function(v)
         _G.FarmDistance = tonumber(v)
     end
 })
 
-Settings:Toggle({Title="Auto Active V3",Callback=function(v)_G.AutoV3=v end})
-Settings:Toggle({Title="Auto Active V4",Callback=function(v)_G.AutoV4=v end})
-Settings:Toggle({Title="Auto Geppo",Callback=function(v)_G.AutoGeppo=v end})
-Settings:Toggle({Title="No Clip",Callback=function(v)_G.Noclip=v end})
-Settings:Toggle({Title="Walk Water",Callback=function(v)_G.WalkWater=v end})
-Settings:Toggle({Title="Auto Set Home Point",Callback=function(v)_G.SetHome=v end})
-
---==============================
--- MAIN TAB
---==============================
+-- MAIN
 local Main = Window:Tab({Title="Main",Icon="Home"})
 
 Main:Toggle({Title="Auto Farm",Callback=function(v)_G.AutoFarm=v end})
-Main:Toggle({Title="Auto Farm Aura",Callback=function(v)_G.AutoAura=v end})
-Main:Toggle({Title="Auto Farm Mastery Fruit",Callback=function(v)_G.AutoFruitMastery=v end})
-Main:Toggle({Title="Auto Second Sea",Callback=function(v)_G.AutoSecondSea=v end})
-Main:Toggle({Title="Auto Third Sea",Callback=function(v)_G.AutoThirdSea=v end})
+Main:Toggle({Title="Auto Near",Callback=function(v)_G.AutoNear=v end})
+Main:Toggle({Title="Auto Quest",Callback=function(v)_G.AutoQuest=v end})
+Main:Toggle({Title="Auto Farm Aura",Callback=function(v)_G.AutoFarmAura=v end})
+Main:Toggle({Title="Auto Farm Material",Callback=function(v)_G.AutoFarmMaterial=v end})
 
---==============================
--- ITEM TAB
---==============================
+-- ITEM / SEA
 local Item = Window:Tab({Title="Item",Icon="Package"})
 
 Item:Toggle({Title="Auto Bone",Callback=function(v)_G.AutoBone=v end})
-Item:Toggle({Title="Auto Trade Bone",Callback=function(v)_G.TradeBone=v end})
-Item:Toggle({Title="Auto Kill Soul Reaper",Callback=function(v)_G.SoulReaper=v end})
-Item:Toggle({Title="Auto Tyrant Of The Skies",Callback=function(v)_G.Tyrant=v end})
-Item:Toggle({Title="Auto Collect Berry",Callback=function(v)_G.Berry=v end})
-Item:Toggle({Title="Auto Factory",Callback=function(v)_G.Factory=v end})
-Item:Toggle({Title="Auto Pirate Raid",Callback=function(v)_G.PirateRaid=v end})
-Item:Toggle({Title="Auto Elite Hunter",Callback=function(v)_G.Elite=v end})
-Item:Toggle({Title="Auto Darkbeard",Callback=function(v)_G.Darkbeard=v end})
-Item:Toggle({Title="Auto Buy Haki",Callback=function(v)_G.BuyHaki=v end})
-
-Item:Dropdown({
-    Title="Select Boss",
-    Options={"All","Cake Prince","Dough King","Rip Indra","Darkbeard"},
-    Callback=function(v)_G.SelectBoss=v end
-})
-
-Item:Toggle({Title="Auto Farm Boss",Callback=function(v)_G.AutoBoss=v end})
-Item:Toggle({Title="Auto Farm Material",Callback=function(v)_G.AutoMaterial=v end})
-
---==============================
--- SWORD TAB
---==============================
-local Sword = Window:Tab({Title="Sword",Icon="Sword"})
-
-local SwordList = {
-"Legendary Sword","Yama","Tushita","Saber","Pole","Saw","Warden",
-"Trident","Long Sword","Gravity Blade","Flail","Rengoku",
-"Dragon Trident","Twin Hook","Cavander","Buddy Sword"
-}
-
-for _,s in pairs(SwordList) do
-    Sword:Toggle({
-        Title="Auto "..s,
-        Callback=function(v)
-            _G["Auto"..s:gsub(" ","")] = v
-        end
-    })
-end
-
---==============================
--- TELEPORT TAB
---==============================
-local TP = Window:Tab({Title="Teleport",Icon="Map"})
-
-TP:Dropdown({
-    Title="Select Sea",
-    Options={"Sea 1","Sea 2","Sea 3"},
-    Callback=function(v)_G.Sea=v end
-})
-
-TP:Dropdown({
-    Title="Select Island",
-    Options={"All Islands"},
-    Callback=function(v)_G.Island=v end
-})
+Item:Toggle({Title="Auto Second Sea",Callback=function(v)_G.AutoSecondSea=v end})
+Item:Toggle({Title="Auto Third Sea",Callback=function(v)_G.AutoThirdSea=v end})
