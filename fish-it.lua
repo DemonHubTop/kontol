@@ -193,10 +193,10 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 
 local Window = Fluent:CreateWindow({
     Title = "Zynix Hub",
-    SubTitle = "by Zynix Team",
+    SubTitle = "Fishing System",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
+    Acrylic = false, -- Matikan acrylic agar lebih kompatibel
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.LeftControl
 })
@@ -208,70 +208,54 @@ local Tabs = {
 
 local Options = Fluent.Options
 
+-- 4. MASUKKAN ELEMENT UI
 do
-    -- Notification saat script jalan
-    Fluent:Notify({
-        Title = "Zynix Hub",
-        Content = "Script Loaded Successfully",
-        Duration = 5
-    })
-
-    --// INPUT DELAY
-    local BypassInput = Tabs.Main:AddInput("BypassDelay", {
+    -- Input Delay
+    Tabs.Main:AddInput("BypassDelay", {
         Title = "Bypass Delay",
-        Description = "Adjust delay between catches",
         Default = "1.45",
         Placeholder = "Example: 1.45",
-        Numeric = false,
-        Finished = true,
         Callback = function(Value)
-            local number = tonumber(Value)
-            if number then
-                BypassDelayV2 = number
-                print("Delay set to:", number)
-            end
+            _G.BypassDelayV2 = tonumber(Value) or 1.45
         end
     })
 
-    --// TOGGLE AUTO SELL
-    local AutoSellToggle = Tabs.Main:AddToggle("AutoSell", {Title = "Auto Sell", Description = "Sells non-favorited fish > 60", Default = false })
-    AutoSellToggle:OnChanged(function()
-        state.AutoSell = Options.AutoSell.Value
-        if Options.AutoSell.Value then startAutoSell() end
+    -- Toggle Auto Sell (Gunakan ID Unik)
+    local Toggle1 = Tabs.Main:AddToggle("TglAutoSell", {Title = "Auto Sell", Default = false})
+    Toggle1:OnChanged(function()
+        state.AutoSell = Options.TglAutoSell.Value
     end)
 
-    --// TOGGLE AUTO FISH
-    local AutoFishToggle = Tabs.Main:AddToggle("AutoFishV2", {Title = "Auto Fish V2 (Optimized)", Description = "Rod-specific timing system", Default = false })
-    AutoFishToggle:OnChanged(function()
-        if Options.AutoFishV2.Value then StartAutoFishV2() else StopAutoFishV2() end
+    -- Toggle Auto Fish (Gunakan ID Unik)
+    local Toggle2 = Tabs.Main:AddToggle("TglAutoFish", {Title = "Auto Fish V2", Default = false})
+    Toggle2:OnChanged(function()
+        if Options.TglAutoFish.Value then StartAutoFishV2() else StopAutoFishV2() end
     end)
 
-    --// TOGGLE PERFECT CAST
-    local PerfectCastToggle = Tabs.Main:AddToggle("PerfectCast", {Title = "Auto Perfect Cast", Default = true })
-    PerfectCastToggle:OnChanged(function()
-        FuncAutoFishV2.perfectCastV2 = Options.PerfectCast.Value
+    -- Toggle Perfect Cast
+    local Toggle3 = Tabs.Main:AddToggle("TglPerfect", {Title = "Auto Perfect Cast", Default = true})
+    Toggle3:OnChanged(function()
+        FuncAutoFishV2.perfectCastV2 = Options.TglPerfect.Value
     end)
 
-    --// PARAGRAPH & FAVORITE
     Tabs.Main:AddParagraph({
-        Title = "Auto Favorite Protection",
-        Content = "Protects Secret, Mythic, and Legendary fish."
+        Title = "Protection",
+        Content = "Auto Favorite protects your rare fishes."
     })
 
-    local AutoFavToggle = Tabs.Main:AddToggle("AutoFav", {Title = "Enable Auto Favorite", Default = false })
-    AutoFavToggle:OnChanged(function()
-        state.AutoFavourite = Options.AutoFav.Value
-        if Options.AutoFav.Value then startAutoFavourite() end
-    end)
-
-    --// BUTTON SELL
+    -- Button Manual Sell
     Tabs.Main:AddButton({
         Title = "Sell All Fishes",
-        Description = "Manually sell all non-favorited fish",
         Callback = function()
             sellAllFishes()
         end
     })
 end
 
+-- 5. FINALIZE
 Window:SelectTab(1)
+Fluent:Notify({
+    Title = "Zynix Hub",
+    Content = "Script Loaded! Press Left Control to Toggle Menu",
+    Duration = 5
+})
