@@ -205,7 +205,7 @@ function StopAutoFishV2()
     RodReelAnim:Stop()
 end
 
-AutoFishSection:AddInput("BypassDelay", {
+local Input = Tabs.Main:AddInput("Input", {
     Title = "Bypass Delay",
     Description = "Adjust delay between catches",
     Default = "1.45",
@@ -219,7 +219,7 @@ AutoFishSection:AddInput("BypassDelay", {
     end
 })
 
-AutoFishSection:AddToggle("AutoSell", {
+local Toggle = Tabs.Main:AddToggle("MyToggle", {
     Title = "Auto Sell", 
     Description = "Sells non-favorited fish > 60",
     Default = false,
@@ -229,7 +229,7 @@ AutoFishSection:AddToggle("AutoSell", {
     end
 })
 
-AutoFishSection:AddToggle("AutoFishV2", {
+local Toggle = Tabs.Main:AddToggle("MyToggle", {
     Title = "Auto Fish V2 (Optimized)", 
     Description = "Rod-specific timing system",
     Default = false,
@@ -238,7 +238,7 @@ AutoFishSection:AddToggle("AutoFishV2", {
     end
 })
 
-AutoFishSection:AddToggle("PerfectCast", {
+local Toggle = Tabs.Main:AddToggle("MyToggle", {
     Title = "Auto Perfect Cast", 
     Default = true,
     Callback = function(Value)
@@ -246,12 +246,12 @@ AutoFishSection:AddToggle("PerfectCast", {
     end
 })
 
-AutoFavSection:AddParagraph({
+    Tabs.Main:AddParagraph({
     Title = "Auto Favorite Protection",
     Content = "Protects Secret, Mythic, and Legendary fish."
 })
 
-AutoFavSection:AddToggle("AutoFavorite", {
+local Toggle = Tabs.Main:AddToggle("MyToggle", {
     Title = "Enable Auto Favorite", 
     Default = false,
     Callback = function(Value)
@@ -260,7 +260,7 @@ AutoFavSection:AddToggle("AutoFavorite", {
     end
 })
 
-ManualSection:AddButton({
+    Tabs.Main:AddButton({
     Title = "Sell All Fishes",
     Description = "Manually sell all non-favorited fish",
     Callback = function()
