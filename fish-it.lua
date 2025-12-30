@@ -1,19 +1,3 @@
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-
-local Window = Fluent:CreateWindow({
-    Title = "Zynix Hub",
-    SubTitle = "by Zynix Team",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
-    Acrylic = true,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
-})
-
-local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "Home" }),
-    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-}
 
 local FuncAutoFishV2 = {
 	REReplicateTextEffectV2 = ReplicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RE/ReplicateTextEffect"],
@@ -205,65 +189,89 @@ function StopAutoFishV2()
     RodReelAnim:Stop()
 end
 
-local Input = Tabs.Main:AddInput("Input", {
-    Title = "Bypass Delay",
-    Description = "Adjust delay between catches",
-    Default = "1.45",
-    Placeholder = "Example: 1.45",
-    Callback = function(Value)
-        local number = tonumber(Value)
-        if number then
-            BypassDelayV2 = number
-            Fluent:Notify({ Title = "Success", Content = "Delay set to " .. number })
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+local Window = Fluent:CreateWindow({
+    Title = "Zynix Hub",
+    SubTitle = "by Zynix Team",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+local Tabs = {
+    Main = Window:AddTab({ Title = "Main", Icon = "home" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
+
+local Options = Fluent.Options
+
+do
+    -- Notification saat script jalan
+    Fluent:Notify({
+        Title = "Zynix Hub",
+        Content = "Script Loaded Successfully",
+        Duration = 5
+    })
+
+    --// INPUT DELAY
+    local BypassInput = Tabs.Main:AddInput("BypassDelay", {
+        Title = "Bypass Delay",
+        Description = "Adjust delay between catches",
+        Default = "1.45",
+        Placeholder = "Example: 1.45",
+        Numeric = false,
+        Finished = true,
+        Callback = function(Value)
+            local number = tonumber(Value)
+            if number then
+                BypassDelayV2 = number
+                print("Delay set to:", number)
+            end
         end
-    end
-})
+    })
 
-local Toggle = Tabs.Main:AddToggle("MyToggle", {
-    Title = "Auto Sell", 
-    Description = "Sells non-favorited fish > 60",
-    Default = false,
-    Callback = function(Value)
-        state.AutoSell = Value
-        if Value then startAutoSell() end
-    end
-})
+    --// TOGGLE AUTO SELL
+    local AutoSellToggle = Tabs.Main:AddToggle("AutoSell", {Title = "Auto Sell", Description = "Sells non-favorited fish > 60", Default = false })
+    AutoSellToggle:OnChanged(function()
+        state.AutoSell = Options.AutoSell.Value
+        if Options.AutoSell.Value then startAutoSell() end
+    end)
 
-local Toggle = Tabs.Main:AddToggle("MyToggle", {
-    Title = "Auto Fish V2 (Optimized)", 
-    Description = "Rod-specific timing system",
-    Default = false,
-    Callback = function(Value)
-        if Value then StartAutoFishV2() else StopAutoFishV2() end
-    end
-})
+    --// TOGGLE AUTO FISH
+    local AutoFishToggle = Tabs.Main:AddToggle("AutoFishV2", {Title = "Auto Fish V2 (Optimized)", Description = "Rod-specific timing system", Default = false })
+    AutoFishToggle:OnChanged(function()
+        if Options.AutoFishV2.Value then StartAutoFishV2() else StopAutoFishV2() end
+    end)
 
-local Toggle = Tabs.Main:AddToggle("MyToggle", {
-    Title = "Auto Perfect Cast", 
-    Default = true,
-    Callback = function(Value)
-        FuncAutoFishV2.perfectCastV2 = Value
-    end
-})
+    --// TOGGLE PERFECT CAST
+    local PerfectCastToggle = Tabs.Main:AddToggle("PerfectCast", {Title = "Auto Perfect Cast", Default = true })
+    PerfectCastToggle:OnChanged(function()
+        FuncAutoFishV2.perfectCastV2 = Options.PerfectCast.Value
+    end)
 
+    --// PARAGRAPH & FAVORITE
     Tabs.Main:AddParagraph({
-    Title = "Auto Favorite Protection",
-    Content = "Protects Secret, Mythic, and Legendary fish."
-})
+        Title = "Auto Favorite Protection",
+        Content = "Protects Secret, Mythic, and Legendary fish."
+    })
 
-local Toggle = Tabs.Main:AddToggle("MyToggle", {
-    Title = "Enable Auto Favorite", 
-    Default = false,
-    Callback = function(Value)
-        state.AutoFavourite = Value
-        if Value then startAutoFavourite() end
-    end
-})
+    local AutoFavToggle = Tabs.Main:AddToggle("AutoFav", {Title = "Enable Auto Favorite", Default = false })
+    AutoFavToggle:OnChanged(function()
+        state.AutoFavourite = Options.AutoFav.Value
+        if Options.AutoFav.Value then startAutoFavourite() end
+    end)
 
+    --// BUTTON SELL
     Tabs.Main:AddButton({
-    Title = "Sell All Fishes",
-    Description = "Manually sell all non-favorited fish",
-    Callback = function()
-        sellAllFishes()
-    end
-})
+        Title = "Sell All Fishes",
+        Description = "Manually sell all non-favorited fish",
+        Callback = function()
+            sellAllFishes()
+        end
+    })
+end
+
+Window:SelectTab(1)
