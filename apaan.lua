@@ -1891,7 +1891,7 @@ end
 
 
 
-local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
   
 --// Create Window //--
 local Window = WindUI:CreateWindow({
